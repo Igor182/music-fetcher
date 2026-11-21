@@ -88,7 +88,7 @@ O `playlist_gen.py` consulta toda a biblioteca diretamente no Google Drive via `
 
 1. **Nome da playlist** (ex: `Rock Anos 90` -> gera `Rock Anos 90.m3u`).
 2. **Filtros opcionais** *(deixe em branco e aperte Enter para ignorar qualquer filtro)*:
-   - **Intervalo de anos ou ano específico**: ex. `1990-1999` ou `2005`, extraído dos 4 primeiros dígitos da pasta do álbum (`Artista/Ano - Álbum/`).
+   - **Intervalo de anos ou ano específico**: ex. `1990-1999` ou `2005`, extraído via regex da pasta do álbum — reconhece tanto `Ano - Álbum` (ex: `1991 - Nevermind`) quanto `Artista - Álbum (Ano)` (ex: `Nirvana - Nevermind (1991)`).
    - **Múltiplos artistas separados por vírgula**: ex. `Nirvana, Pearl Jam, Radiohead` (busca parcial *case-insensitive* na pasta do artista).
    - **Formato de áudio específico**: `flac`, `m4a`, `mp3`, `ogg` ou `opus` (ou todos os formatos se deixado em branco).
 

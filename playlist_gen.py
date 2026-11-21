@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -115,10 +116,10 @@ def main():
             continue
 
         if ano_inicio is not None and ano_fim is not None:
-            ano_str = pasta_album[:4]
-            if not ano_str.isdigit():
+            match_ano = re.search(r"\b(19\d{2}|20\d{2})\b", pasta_album)
+            if not match_ano:
                 continue
-            ano = int(ano_str)
+            ano = int(match_ano.group(1))
             if not (ano_inicio <= ano <= ano_fim):
                 continue
 
