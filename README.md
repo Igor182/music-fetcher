@@ -13,6 +13,7 @@ flowchart LR
     C --> D["rclone move\n(com rate-limit)"]
     D --> E["Google Drive\ngdrive:Músicas"]
     E <--> P["playlist_gen.py\n(criar-playlist)\nrclone lsf -> .m3u"]
+    E <--> O["arrumar_artista.py & numerar_album.py\nOrganização de faixas e tags via rclone"]
     E --> F["FolderSync (Android)\nUnidirecional: Para a pasta da esquerda\n(To local folder)"]
     F --> G["Musicolet\n/storage/emulated/0/Music/\n(Faixas + Playlists/*.m3u)"]
 ```
@@ -116,6 +117,48 @@ Assim, o **Musicolet** importa os arquivos `.m3u` automaticamente sem depender d
 
 ---
 
+### 3. Organizar biblioteca no Google Drive (`arrumar_artista.py` e `numerar_album.py`)
+
+Dois scripts CLI adicionais permitem manter a biblioteca organizada diretamente no Google Drive (`gdrive:Músicas`) usando `rclone`, `mutagen` e `yt-dlp`:
+
+#### Agrupar músicas soltas de um artista (`arrumar_artista.py`)
+
+Lê a pasta de um artista no Drive, identifica faixas soltas na raiz e lê suas tags internas locais (`album`, `date`/`originaldate`, `tracknumber` e `title` via `mutagen`) para movê-las para pastas de álbuns — **reaproveitando pastas já existentes** (com normalização de nomes) e detectando duplicatas já presentes em álbuns.
+
+```bash
+# Simular sem alterar o Google Drive
+.venv/bin/python arrumar_artista.py "Frank Sinatra" --dry-run
+
+# Mover faixas soltas para seus respectivos álbuns
+.venv/bin/python arrumar_artista.py "Frank Sinatra"
+
+# Mover faixas soltas e apagar duplicatas já existentes dentro de álbuns
+.venv/bin/python arrumar_artista.py "Frank Sinatra" --apagar-duplicatas
+```
+
+*(No Windows, use `.\.venv\Scripts\python.exe arrumar_artista.py ...`.)*
+
+#### Corrigir numeração interna de faixas de um álbum (`numerar_album.py`)
+
+Localiza a pasta do álbum no Google Drive pelo nome (ou caminho direto `"Artista/Álbum"`), busca a tracklist oficial via `yt-dlp` no YouTube/YouTube Music (ou recebe uma fonte manual via `--url` ou arquivo `--lista`) e grava **apenas a tag interna de número da faixa** (`trkn` em `.m4a` e `tracknumber` em `.mp3`), removendo prefixos numéricos antigos para manter os nomes dos arquivos limpos.
+
+```bash
+# Modo interativo (pergunta o nome do álbum e mostra prévia antes de aplicar)
+.venv/bin/python numerar_album.py
+
+# Buscar álbum pelo nome ou caminho direto (com prévia sem alterar o Drive)
+.venv/bin/python numerar_album.py "Nevermind" --dry-run
+.venv/bin/python numerar_album.py "Nirvana/1991 - Nevermind"
+
+# Informar URL direta da playlist/álbum no YouTube ou arquivo .txt com a ordem das faixas
+.venv/bin/python numerar_album.py "Nevermind" --url "https://music.youtube.com/playlist?list=..."
+.venv/bin/python numerar_album.py "Nevermind" --lista lista.txt -y
+```
+
+*(No Windows, use `.\.venv\Scripts\python.exe numerar_album.py ...`.)*
+
+---
+
 ## Configuração Manual de Aliases (opcional)
 
 Caso prefira configurar manualmente sem rodar o `install.sh`:
@@ -154,8 +197,10 @@ alias criar-playlist='python ~/projetos/music-fetcher/playlist_gen.py'
 | --- | --- |
 | `main.py` | CLI interativa de download (`spotdl`) e envio automático para o Drive (`rclone move`). |
 | `playlist_gen.py` | CLI interativa geradora de playlists `.m3u` direto da nuvem (`rclone lsf`). |
+| `arrumar_artista.py` | Organiza músicas soltas de um artista no Drive em pastas de álbuns lendo tags internas (`mutagen`) e reaproveitando pastas existentes. |
+| `numerar_album.py` | Localiza um álbum no Drive, busca a tracklist via `yt-dlp` (ou `--url`/`--lista`) e grava tags internas de faixa (`trkn`/`tracknumber`) mantendo os nomes dos arquivos limpos. |
 | `config.json` | Configurações de remote, áudio, template de pastas e rate-limit do `rclone`. |
-| `requirements.txt` | Dependência Python (`spotdl`). |
+| `requirements.txt` | Dependências Python (`spotdl`, `mutagen`, `yt-dlp`). |
 | `install.sh` | Instalador automático para Arch Linux / Linux (cria `.venv`, instala deps e configura aliases). |
 | `install.ps1` | Instalador automático para Windows (cria `.venv`, instala deps e registra comandos no `PATH`). |
 | `baixar-musica.cmd` | Wrapper Windows para o `main.py`. |
