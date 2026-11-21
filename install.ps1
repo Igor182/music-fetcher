@@ -86,6 +86,9 @@ if (-not ($Remotes -contains "${RemoteName}:")) {
 Write-Host ""
 Write-Host "[SUCESSO] Instalação concluída!" -ForegroundColor Green
 Write-Host "Reabra o terminal (PowerShell ou CMD) e use de qualquer pasta:"
+Write-Host "  app-musica      -> menu interativo com todas as funcoes"
 Write-Host "  baixar-musica   -> baixar músicas/álbuns/playlists e enviar ao Drive"
 Write-Host "  criar-playlist  -> gerar playlists .m3u interativas direto do Drive"
 Write-Host "  numerar-album   -> numerar faixas de um álbum no Drive"
+Write-Host "  aplicar-capa    -> embutir capa (cover.jpg/png) nos arquivos do álbum"
+Write-Host "  arrumar-artista -> organizar músicas soltas de um artista em álbuns"

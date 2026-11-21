@@ -40,6 +40,7 @@ playlists_m3u/
 .tmp_*/
 .tmp_tags/
 .tmp_numerar/
+.tmp_capa/
 .tmp_organize/
 .tmp_spotdl_replace/
 lista.txt

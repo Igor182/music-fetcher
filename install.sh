@@ -34,14 +34,17 @@ echo "[2/3] Instalando dependências Python (requirements.txt)..."
 "$VENV_DIR/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 
 # 3. Configura aliases no ~/.bashrc e/ou ~/.zshrc (sem duplicar)
-echo "[3/3] Configurando atalhos 'baixar-musica', 'criar-playlist' e 'numerar-album'..."
+echo "[3/3] Configurando atalhos ('app-musica', 'baixar-musica', 'criar-playlist', 'numerar-album', 'aplicar-capa', 'arrumar-artista')..."
 
 MARKER_START="# >>> music-fetcher >>>"
 MARKER_END="# <<< music-fetcher <<<"
 ALIAS_BLOCK="$MARKER_START
+alias app-musica='$VENV_DIR/bin/python $PROJECT_DIR/app_musica.py'
 alias baixar-musica='$VENV_DIR/bin/python $PROJECT_DIR/main.py'
 alias criar-playlist='$VENV_DIR/bin/python $PROJECT_DIR/playlist_gen.py'
 alias numerar-album='$VENV_DIR/bin/python $PROJECT_DIR/numerar_album.py'
+alias aplicar-capa='$VENV_DIR/bin/python $PROJECT_DIR/aplicar_capa.py'
+alias arrumar-artista='$VENV_DIR/bin/python $PROJECT_DIR/arrumar_artista.py'
 $MARKER_END"
 
 update_shell_rc() {
@@ -88,6 +91,9 @@ fi
 echo ""
 echo "[SUCESSO] Instalação concluída!"
 echo "Recarregue seu terminal (ex: 'source ~/.bashrc' ou 'source ~/.zshrc') e use:"
+echo "  app-musica      -> menu interativo com todas as funcoes"
 echo "  baixar-musica   -> baixar músicas/álbuns/playlists e enviar ao Drive"
 echo "  criar-playlist  -> gerar playlists .m3u interativas direto do Drive"
 echo "  numerar-album   -> numerar faixas de um álbum no Drive"
+echo "  aplicar-capa    -> embutir capa (cover.jpg/png) nos arquivos do álbum"
+echo "  arrumar-artista -> organizar músicas soltas de um artista em álbuns"

@@ -65,7 +65,25 @@ flowchart LR
 
 ## Como Usar
 
-Depois de instalar, basta digitar de qualquer pasta:
+### Menu Unificado (`app-musica` / `app_musica.py`)
+
+Depois de instalar, basta digitar **`app-musica`** de qualquer pasta no terminal (Arch Linux ou Windows CMD/PowerShell) para abrir o menu central interativo com todas as ferramentas da suíte:
+
+```text
+========================================
+             APP-MUSICA CLI
+========================================
+  [1] Baixar musicas / albuns / playlists (Spotify)
+  [2] Criar / gerar playlist
+  [3] Arrumar pasta de artista (agrupar faixas soltas)
+  [4] Numerar faixas de album (tracklist online / tag interna)
+  [5] Aplicar capa do album nos arquivos (cover.jpg/png)
+  [6] Atualizar repositorio (git pull)
+  [0] Sair
+========================================
+```
+
+Você também pode chamar cada ferramenta diretamente pelo seu atalho individual:
 
 ### 1. Baixar músicas e sincronizar (`baixar-musica` / `main.py`)
 
@@ -155,6 +173,19 @@ numerar-album "Nevermind" --lista lista.txt -y
 
 *(Caso não tenha rodado o instalador, execute com `.venv/bin/python numerar_album.py` no Linux ou `.\.venv\Scripts\python.exe numerar_album.py` no Windows.)*
 
+#### Embutir capa de álbum nos arquivos (`aplicar-capa` / `aplicar_capa.py`)
+
+Localiza a pasta do álbum no Google Drive, identifica a imagem de capa já existente na pasta (priorizando `cover.jpg`, `cover.png`, `folder.jpg`, `folder.png` ou permitindo escolher quando houver mais de uma), baixa as faixas `.mp3`/`.m4a` em paralelo via `rclone`, embute a arte nas tags internas (`APIC` para MP3 e `covr` para M4A via `mutagen`) e reenvia os arquivos atualizados em lote para o Drive.
+
+```bash
+# Modo interativo (pergunta o nome do álbum)
+aplicar-capa
+
+# Ou passando o nome do álbum e/ou imagem específica
+aplicar-capa "Return Of The Dream Canteen"
+aplicar-capa "Return Of The Dream Canteen" --imagem "cover.jpg"
+```
+
 ---
 
 ## Configuração Manual de Aliases (opcional)
@@ -193,17 +224,22 @@ alias criar-playlist='python ~/projetos/music-fetcher/playlist_gen.py'
 
 | Arquivo | Função |
 | --- | --- |
+| `app_musica.py` | Menu CLI unificado (`app-musica`) que integra todas as funcionalidades da suíte. |
 | `main.py` | CLI interativa de download (`spotdl`) e envio automático para o Drive (`rclone move`). |
 | `playlist_gen.py` | CLI interativa geradora de playlists `.m3u` direto da nuvem (`rclone lsf`). |
 | `arrumar_artista.py` | Organiza músicas soltas de um artista no Drive em pastas de álbuns lendo tags internas (`mutagen`) e reaproveitando pastas existentes. |
 | `numerar_album.py` | Localiza um álbum no Drive, busca a tracklist via `yt-dlp` (ou `--url`/`--lista`) e grava tags internas de faixa (`trkn`/`tracknumber`) mantendo os nomes dos arquivos limpos. |
+| `aplicar_capa.py` | Baixa as faixas de um álbum do Drive em paralelo, embute a imagem de capa da pasta (`APIC`/`covr` via `mutagen`) e sobe os arquivos atualizados. |
 | `config.json` | Configurações de remote, áudio, template de pastas e rate-limit do `rclone`. |
 | `requirements.txt` | Dependências Python (`spotdl`, `mutagen`, `yt-dlp`). |
 | `install.sh` | Instalador automático para Arch Linux / Linux (cria `.venv`, instala deps e configura aliases). |
 | `install.ps1` | Instalador automático para Windows (cria `.venv`, instala deps e registra comandos no `PATH`). |
+| `app-musica.cmd` | Wrapper Windows para o menu principal `app_musica.py`. |
 | `baixar-musica.cmd` | Wrapper Windows para o `main.py`. |
 | `criar-playlist.cmd` | Wrapper Windows para o `playlist_gen.py`. |
 | `numerar-album.cmd` | Wrapper Windows para o `numerar_album.py`. |
+| `aplicar-capa.cmd` | Wrapper Windows para o `aplicar_capa.py`. |
+| `arrumar-artista.cmd` | Wrapper Windows para o `arrumar_artista.py`. |
 | `atualizar-music.cmd` | Atualiza o repositório (`git pull`) e dependências Python no Windows com 1 comando. |
 
 ---
