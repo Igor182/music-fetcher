@@ -36,6 +36,14 @@ downloads/
 Music/
 playlists_m3u/
 
+# Pastas temporárias e arquivos auxiliares dos scripts de organização
+.tmp_*/
+.tmp_tags/
+.tmp_numerar/
+.tmp_organize/
+.tmp_spotdl_replace/
+lista.txt
+
 # Credenciais, tokens e arquivos sensíveis
 .env
 .env.*
