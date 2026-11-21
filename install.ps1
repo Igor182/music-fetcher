@@ -88,3 +88,4 @@ Write-Host "[SUCESSO] Instalação concluída!" -ForegroundColor Green
 Write-Host "Reabra o terminal (PowerShell ou CMD) e use de qualquer pasta:"
 Write-Host "  baixar-musica   -> baixar músicas/álbuns/playlists e enviar ao Drive"
 Write-Host "  criar-playlist  -> gerar playlists .m3u interativas direto do Drive"
+Write-Host "  numerar-album   -> numerar faixas de um álbum no Drive"

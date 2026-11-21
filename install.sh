@@ -34,13 +34,14 @@ echo "[2/3] Instalando dependências Python (requirements.txt)..."
 "$VENV_DIR/bin/pip" install -r "$PROJECT_DIR/requirements.txt"
 
 # 3. Configura aliases no ~/.bashrc e/ou ~/.zshrc (sem duplicar)
-echo "[3/3] Configurando atalhos 'baixar-musica' e 'criar-playlist'..."
+echo "[3/3] Configurando atalhos 'baixar-musica', 'criar-playlist' e 'numerar-album'..."
 
 MARKER_START="# >>> music-fetcher >>>"
 MARKER_END="# <<< music-fetcher <<<"
 ALIAS_BLOCK="$MARKER_START
 alias baixar-musica='$VENV_DIR/bin/python $PROJECT_DIR/main.py'
 alias criar-playlist='$VENV_DIR/bin/python $PROJECT_DIR/playlist_gen.py'
+alias numerar-album='$VENV_DIR/bin/python $PROJECT_DIR/numerar_album.py'
 $MARKER_END"
 
 update_shell_rc() {
@@ -89,3 +90,4 @@ echo "[SUCESSO] Instalação concluída!"
 echo "Recarregue seu terminal (ex: 'source ~/.bashrc' ou 'source ~/.zshrc') e use:"
 echo "  baixar-musica   -> baixar músicas/álbuns/playlists e enviar ao Drive"
 echo "  criar-playlist  -> gerar playlists .m3u interativas direto do Drive"
+echo "  numerar-album   -> numerar faixas de um álbum no Drive"
