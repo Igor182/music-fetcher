@@ -7,6 +7,7 @@ import unicodedata
 from pathlib import Path
 from mutagen import File as MutagenFile
 
+BASE_DIR = Path(__file__).resolve().parent
 REMOTE_BASE = "gdrive:M\u00fasicas"
 EXTENSOES_AUDIO = {".mp3", ".m4a", ".flac", ".ogg", ".opus"}
 
@@ -102,7 +103,7 @@ def main():
                 pastas_existentes[chave] = pasta_topo
 
     print(f"Encontrados {len(soltos)} soltos, {len(existentes)} faixas em albuns e {len(pastas_existentes)} pastas de albuns.\n")
-    tmp = Path(".tmp_tags") / sanitizar(artista)
+    tmp = BASE_DIR / ".tmp_tags" / sanitizar(artista)
     shutil.rmtree(tmp, ignore_errors=True)
     tmp.mkdir(parents=True, exist_ok=True)
 

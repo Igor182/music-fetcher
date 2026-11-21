@@ -11,6 +11,7 @@ from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4
 
+BASE_DIR = Path(__file__).resolve().parent
 REMOTE_BASE = "gdrive:M\u00fasicas"
 EXTENSOES = {".mp3", ".m4a", ".flac", ".ogg", ".opus"}
 
@@ -91,8 +92,9 @@ def extrair_playlist(exe, url):
 
 
 def buscar_tracklist_yt(consulta, url_direta=None):
-    ytdlp = Path(".venv/Scripts/yt-dlp.exe")
-    exe = str(ytdlp) if ytdlp.exists() else "yt-dlp"
+    ytdlp_win = BASE_DIR / ".venv" / "Scripts" / "yt-dlp.exe"
+    ytdlp_unix = BASE_DIR / ".venv" / "bin" / "yt-dlp"
+    exe = str(ytdlp_win) if ytdlp_win.exists() else (str(ytdlp_unix) if ytdlp_unix.exists() else "yt-dlp")
 
     if url_direta:
         print(f"Extraindo tracklist da URL: {url_direta}...")
@@ -215,7 +217,7 @@ def main():
             print("Operacao cancelada.")
             return
 
-    tmp = Path(".tmp_numerar")
+    tmp = BASE_DIR / ".tmp_numerar"
     shutil.rmtree(tmp, ignore_errors=True)
     tmp.mkdir(parents=True, exist_ok=True)
 
