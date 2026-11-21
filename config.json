@@ -1,0 +1,12 @@
+{
+  "rclone_remote": "gdrive:Músicas",
+  "temp_dir": null,
+  "audio_format": "m4a",
+  "audio_bitrate": "256k",
+  "output_template": "{artist}/{year} - {album}/{track-number} - {title}.{output-ext}",
+  "download_threads": 4,
+  "rclone_transfers": 3,
+  "rclone_checkers": 4,
+  "rclone_tpslimit": 2,
+  "rclone_retries": 5
+}

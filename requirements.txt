@@ -1,0 +1,3 @@
+# Dependência principal (instala automaticamente yt-dlp, mutagen, spotipy, rich, etc.)
+# Compatível com Linux e Windows
+spotdl>=4.6.0

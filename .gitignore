@@ -1,0 +1,61 @@
+# Ambientes virtuais Python
+.venv/
+venv/
+ENV/
+env/
+
+# Cache e build Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+.pytest_cache/
+
+# Arquivos de áudio e mídia (biblioteca musical / downloads temporários)
+*.m4a
+*.flac
+*.mp3
+*.ogg
+*.opus
+*.wav
+*.aac
+*.wma
+*.alac
+*.webm
+*.mp4
+*.mkv
+*.part
+*.ytdl
+*.lrc
+downloads/
+Music/
+
+# Credenciais, tokens e arquivos sensíveis
+.env
+.env.*
+rclone.conf
+credentials.json
+token.json
+secrets.json
+*.key
+*.pem
+*.token
+.spotipy
+.cache
+.cache-*
+spotdl-config.json
+
+# Logs
+*.log
+
+# Arquivos de sistema operacional e editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*.swo
