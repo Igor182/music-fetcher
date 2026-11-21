@@ -204,6 +204,7 @@ alias criar-playlist='python ~/projetos/music-fetcher/playlist_gen.py'
 | `baixar-musica.cmd` | Wrapper Windows para o `main.py`. |
 | `criar-playlist.cmd` | Wrapper Windows para o `playlist_gen.py`. |
 | `numerar-album.cmd` | Wrapper Windows para o `numerar_album.py`. |
+| `atualizar-music.cmd` | Atualiza o repositório (`git pull`) e dependências Python no Windows com 1 comando. |
 
 ---
 
