@@ -6,8 +6,7 @@ set "PYTHON_BIN=%~dp0.venv\Scripts\python.exe"
 if not exist "%PYTHON_BIN%" (
     echo [ERRO] Ambiente virtual nao encontrado em "%~dp0.venv".
     echo        Execute na pasta do projeto:
-    echo          py -m venv .venv
-    echo          .\.venv\Scripts\pip.exe install -r requirements.txt
+    echo          .\install.ps1
     exit /b 1
 )
 
