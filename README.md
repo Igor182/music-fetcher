@@ -126,29 +126,50 @@ cd ~/projetos/music-fetcher
 Adicione ao final do seu `~/.bashrc`:
 
 ```bash
-alias music='~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/main.py'
+alias baixar-musica='~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/main.py'
 ```
 
-Recarregue com `source ~/.bashrc` e execute de qualquer diretório apenas digitando `music`.
+Recarregue com `source ~/.bashrc` e execute de qualquer diretório apenas digitando `baixar-musica`.
 
-### Windows (PowerShell)
+### Windows (PowerShell / CMD)
 
 ```powershell
 cd C:\caminho\para\music-fetcher
 .\.venv\Scripts\python.exe main.py
 ```
 
-#### Função opcional no perfil do PowerShell (Windows)
+#### Atalho `baixar-musica` global no Windows (PowerShell, CMD e `Win + R`)
 
-Abra seu perfil com `notepad $PROFILE` e adicione:
+O repositório já inclui o wrapper `baixar-musica.cmd`. Para digitar `baixar-musica` de qualquer pasta, basta adicionar a pasta do projeto ao `PATH` do seu usuário (rode 1 vez no PowerShell dentro da pasta do projeto):
 
 ```powershell
-function music {
+$repo = (Get-Location).Path
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if (($userPath -split ';') -notcontains $repo) {
+    [Environment]::SetEnvironmentVariable("Path", "$userPath;$repo", "User")
+}
+```
+
+Reabra o terminal e execute apenas digitando `baixar-musica`.
+
+#### Alternativa: função no perfil do PowerShell (`$PROFILE`)
+
+Se preferir usar um atalho apenas no PowerShell sem alterar o `PATH`, abra (ou crie) seu perfil:
+
+```powershell
+if (!(Test-Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force }
+notepad $PROFILE
+```
+
+E adicione (ajustando o caminho onde o projeto foi clonado):
+
+```powershell
+function baixar-musica {
     & "$HOME\projetos\music-fetcher\.venv\Scripts\python.exe" "$HOME\projetos\music-fetcher\main.py"
 }
 ```
 
-Recarregue o terminal e execute apenas digitando `music`.
+Recarregue o terminal e execute apenas digitando `baixar-musica`.
 
 > **Nota:** Não é obrigatório ativar a `.venv` antes de rodar; o `main.py` localiza automaticamente o `spotdl` dentro da `.venv` usada para iniciar o Python.
 
