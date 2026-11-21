@@ -20,7 +20,7 @@ def norm(texto):
     t = unicodedata.normalize("NFKD", str(texto))
     t = "".join(c for c in t if not unicodedata.combining(c)).lower()
     t = re.sub(r"^\d+\s*[-._]\s*", "", t)
-    t = re.sub(r"\b(ao vivo|live|remastered|remaster|part|feat|citacao|trecho|incluindo|official|audio|video|deluxe|expanded|edition)\b.*", "", t)
+    t = re.sub(r"\b(ao vivo|live|remastered|remaster|part|feat|citacao|trecho|incluindo|official|audio|video|deluxe|expanded|edition|extra|turne|bonus|faixa bonus|radio edit)\b.*", "", t)
     return re.sub(r"[^a-z0-9]+", " ", t).strip()
 
 
@@ -137,14 +137,28 @@ def encontrar_indice_faixa(nome_arquivo_norm, tracklist_norm):
         if titulo and (titulo == nome_arquivo_norm or titulo in nome_arquivo_norm or nome_arquivo_norm in titulo):
             return idx
 
+    palavras_arq = set(nome_arquivo_norm.split())
     melhor_idx = None
     melhor_score = 0.0
+
     for idx, titulo in enumerate(tracklist_norm, start=1):
-        score = SequenceMatcher(None, nome_arquivo_norm, titulo).ratio()
+        if not titulo:
+            continue
+        palavras_tit = set(titulo.split())
+        menor_len = min(len(palavras_arq), len(palavras_tit))
+
+        # Proporcao de palavras do titulo menor presentes no maior
+        overlap = (len(palavras_arq & palavras_tit) / menor_len) if menor_len > 0 else 0.0
+        seq_ratio = SequenceMatcher(None, nome_arquivo_norm, titulo).ratio()
+
+        # Usa o maior sinal entre semelhança textual e contenção de palavras
+        score = max(seq_ratio, overlap * 0.95) if menor_len >= 2 else seq_ratio
+
         if score > melhor_score:
             melhor_score = score
             melhor_idx = idx
-    return melhor_idx if melhor_score >= 0.65 else None
+
+    return melhor_idx if melhor_score >= 0.62 else None
 
 
 def main():
