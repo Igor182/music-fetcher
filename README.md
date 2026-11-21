@@ -1,6 +1,6 @@
 # Music Fetcher
 
-Ferramenta CLI em Python (compatível com **Arch Linux** e **Windows**) para baixar, organizar com metadados e sincronizar uma biblioteca musical offline (~29,3 GiB / ~3.292 faixas) entre o PC, o **Google Drive** e um smartphone **Android** (**FolderSync** + **Musicolet**).
+Suíte CLI em Python (compatível com **Arch Linux** e **Windows**) para baixar, organizar com metadados, gerar playlists dinâmicas direto da nuvem e sincronizar uma biblioteca musical offline (~29,3 GiB / ~3.360 faixas) entre o PC, o **Google Drive** e um smartphone **Android** (**FolderSync** + **Musicolet**).
 
 ---
 
@@ -8,20 +8,42 @@ Ferramenta CLI em Python (compatível com **Arch Linux** e **Windows**) para bai
 
 ```mermaid
 flowchart LR
-    A["CLI (main.py)"] --> B["spotdl + ffmpeg\nDownload e metadados"]
+    A["main.py\n(CLI Downloader)"] --> B["spotdl + ffmpeg\nDownload e metadados"]
     B --> C["Pasta temporária\nArtista/Ano - Álbum/Faixa.ext"]
     C --> D["rclone move\n(com rate-limit)"]
     D --> E["Google Drive\ngdrive:Músicas"]
-    E --> F["FolderSync (Android)\nUnidirecional: To local folder"]
-    F --> G["Musicolet\n/storage/emulated/0/Music/"]
+    E <--> P["playlist_gen.py\nrclone lsf -> .m3u\ngdrive:Músicas/Playlists"]
+    E --> F["FolderSync (Android)\nUnidirecional: Para a pasta da esquerda\n(To local folder)"]
+    F --> G["Musicolet\n/storage/emulated/0/Music/\n(Faixas + Playlists .m3u)"]
 ```
 
-1. **Download e Metadados (`spotdl` + `ffmpeg`)**: Baixa faixas avulsas, álbuns completos ou playlists (por busca textual ou links do Spotify/YouTube) em `.m4a` (ou `.flac`), embutindo capa e tags ID3/MP4 e organizando automaticamente em:
-   ```text
-   Artista/Ano - Álbum/Número - Título.ext
-   ```
-2. **Sincronização com a Nuvem (`rclone`)**: Move os arquivos da pasta temporária local diretamente para o Google Drive (`gdrive:Músicas`) com limites de taxa ajustados para evitar erros `403 RATE_LIMIT_EXCEEDED`, removendo diretórios locais vazios após o envio.
-3. **Sincronização Mobile (`FolderSync` + `Musicolet`)**: O Android baixa apenas os arquivos novos de `/Músicas` no Google Drive para `/storage/emulated/0/Music/` no modo unidirecional (**To local folder**), sem apagar nem duplicar faixas já existentes no aparelho.
+### Componentes da Suíte
+
+1. **Download e Metadados (`main.py` + `spotdl` + `ffmpeg`)**:
+   - Baixa faixas avulsas, álbuns completos ou playlists (por busca textual ou links do Spotify/YouTube) em `.m4a` (ou `.flac`), embutindo capa e metadados e organizando automaticamente em:
+     ```text
+     Artista/Ano - Álbum/Número - Título.ext
+     ```
+2. **Sincronização com a Nuvem (`rclone`)**:
+   - Move os arquivos da pasta temporária local diretamente para o Google Drive (`gdrive:Músicas`) com limites de taxa ajustados para evitar erros `403 RATE_LIMIT_EXCEEDED`, removendo diretórios locais vazios após o envio.
+3. **Gerador Automático de Playlists (`playlist_gen.py`)**:
+   - Consulta a biblioteca diretamente na nuvem via `rclone lsf gdrive:Músicas -R --files-only` **sem precisar baixar as músicas localmente**.
+   - Filtra as faixas por critérios dinâmicos (como intervalo de anos ou formato lossless), gera arquivos `.m3u` com caminhos relativos (`../Artista/Ano - Álbum/Faixa.ext`) e envia para `gdrive:Músicas/Playlists`.
+4. **Sincronização Mobile (`FolderSync` + `Musicolet`)**:
+   - O Android puxa apenas os arquivos novos (músicas e `.m3u`) de `/Músicas` para `/storage/emulated/0/Music/` no modo unidirecional (**Para a pasta da esquerda / To local folder**), sem apagar nem duplicar arquivos existentes, permitindo importar as playlists diretamente no Musicolet.
+
+---
+
+## Estrutura do Projeto
+
+| Arquivo | Função |
+| --- | --- |
+| `main.py` | CLI interativa de download (`spotdl`) e upload automático para o Drive (`rclone move`). |
+| `playlist_gen.py` | Gerador automático de playlists `.m3u` consultando o Google Drive via `rclone lsf`. |
+| `config.json` | Configurações de remote do `rclone`, formato/bitrate de áudio, template de pastas e rate-limit. |
+| `requirements.txt` | Dependências Python do projeto (`spotdl`). |
+| `baixar-musica.cmd` | Wrapper opcional para chamar `main.py` via terminal no Windows. |
+| `gerar-playlists.cmd` | Wrapper opcional para chamar `playlist_gen.py` via terminal no Windows. |
 
 ---
 
@@ -99,7 +121,7 @@ pip install -r requirements.txt
 
 | Chave | Valor padrão | Descrição |
 | --- | --- | --- |
-| `rclone_remote` | `"gdrive:Músicas"` | Destino remoto no `rclone`. |
+| `rclone_remote` | `"gdrive:Músicas"` | Destino remoto no `rclone` (usado tanto pelo `main.py` quanto pelo `playlist_gen.py`). |
 | `temp_dir` | `null` | Pasta temporária para downloads. Com `null`, usa automaticamente o diretório temporário do sistema (`/tmp/music-fetcher-downloads` no Linux ou `%TEMP%\music-fetcher-downloads` no Windows). Também aceita caminhos customizados com `~` ou variáveis de ambiente. |
 | `audio_format` | `"m4a"` | Formato de áudio de saída (`m4a`, `flac`, `mp3`, `opus`, etc.). |
 | `audio_bitrate` | `"256k"` | Taxa de bits do áudio (`128k`, `256k`, `320k`, `auto`). |
@@ -114,33 +136,65 @@ pip install -r requirements.txt
 
 ## Como Usar
 
-### Arch Linux
+### 1. Downloader de Músicas (`main.py`)
+
+**Arch Linux:**
 
 ```bash
-cd ~/projetos/music-fetcher
-.venv/bin/python main.py
+~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/main.py
 ```
 
-#### Alias opcional no `~/.bashrc` (Arch Linux)
-
-Adicione ao final do seu `~/.bashrc`:
-
-```bash
-alias baixar-musica='~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/main.py'
-```
-
-Recarregue com `source ~/.bashrc` e execute de qualquer diretório apenas digitando `baixar-musica`.
-
-### Windows (PowerShell / CMD)
+**Windows (PowerShell / CMD):**
 
 ```powershell
 cd C:\caminho\para\music-fetcher
 .\.venv\Scripts\python.exe main.py
 ```
 
-#### Atalho `baixar-musica` global no Windows (PowerShell, CMD e `Win + R`)
+Digite o nome da música, álbum, playlist ou cole um link do Spotify/YouTube. O script baixa, organiza os metadados e envia automaticamente para o Google Drive.
 
-O repositório já inclui o wrapper `baixar-musica.cmd`. Para digitar `baixar-musica` de qualquer pasta, basta adicionar a pasta do projeto ao `PATH` do seu usuário (rode 1 vez no PowerShell dentro da pasta do projeto):
+---
+
+### 2. Gerador Automático de Playlists (`playlist_gen.py`)
+
+**Arch Linux:**
+
+```bash
+~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/playlist_gen.py
+```
+
+**Windows (PowerShell / CMD):**
+
+```powershell
+.\.venv\Scripts\python.exe playlist_gen.py
+```
+
+O que o script faz automaticamente:
+1. Lista toda a biblioteca remota via `rclone lsf gdrive:Músicas -R --files-only` (sem baixar nenhum arquivo de áudio).
+2. Aplica os filtros configurados nas extensões suportadas (`.mp3`, `.m4a`, `.flac`, `.ogg`, `.opus`):
+   - **`Classicos (1950-1969).m3u`**: faixas cuja pasta de álbum (`Ano - Álbum`) tem ano entre `1950` e `1969`.
+   - **`Alta Fidelidade (FLAC).m3u`**: todas as faixas lossless no formato `.flac`.
+3. Gera arquivos `#EXTM3U` com quebras de linha LF e caminhos relativos `../Artista/Ano - Álbum/Faixa.ext` (compatíveis com a subpasta `/Music/Playlists/` no Android).
+4. Envia os `.m3u` para `gdrive:Músicas/Playlists` via `rclone copy`.
+
+---
+
+### 3. Atalhos no Terminal (Aliases)
+
+#### Arch Linux (`~/.bashrc`)
+
+Adicione ao final do seu `~/.bashrc`:
+
+```bash
+alias baixar-musica='~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/main.py'
+alias gerar-playlists='~/projetos/music-fetcher/.venv/bin/python ~/projetos/music-fetcher/playlist_gen.py'
+```
+
+Recarregue com `source ~/.bashrc` e execute de qualquer diretório apenas digitando `baixar-musica` ou `gerar-playlists`.
+
+#### Windows (Global no PowerShell, CMD e `Win + R`)
+
+O repositório já inclui os wrappers `baixar-musica.cmd` e `gerar-playlists.cmd`. Para usá-los de qualquer pasta, adicione a pasta do projeto ao `PATH` do seu usuário (rode 1 vez no PowerShell dentro da pasta do projeto):
 
 ```powershell
 $repo = (Get-Location).Path
@@ -150,26 +204,28 @@ if (($userPath -split ';') -notcontains $repo) {
 }
 ```
 
-Reabra o terminal e execute apenas digitando `baixar-musica`.
+Reabra o terminal e execute apenas digitando `baixar-musica` ou `gerar-playlists`.
 
-#### Alternativa: função no perfil do PowerShell (`$PROFILE`)
+#### Alternativa no Windows: funções no `$PROFILE` do PowerShell
 
-Se preferir usar um atalho apenas no PowerShell sem alterar o `PATH`, abra (ou crie) seu perfil:
+Se preferir usar atalhos apenas no PowerShell sem alterar o `PATH`:
 
 ```powershell
 if (!(Test-Path $PROFILE)) { New-Item -ItemType File -Path $PROFILE -Force }
 notepad $PROFILE
 ```
 
-E adicione (ajustando o caminho onde o projeto foi clonado):
+Adicione (ajustando o caminho onde o projeto foi clonado):
 
 ```powershell
 function baixar-musica {
     & "$HOME\projetos\music-fetcher\.venv\Scripts\python.exe" "$HOME\projetos\music-fetcher\main.py"
 }
-```
 
-Recarregue o terminal e execute apenas digitando `baixar-musica`.
+function gerar-playlists {
+    & "$HOME\projetos\music-fetcher\.venv\Scripts\python.exe" "$HOME\projetos\music-fetcher\playlist_gen.py"
+}
+```
 
 > **Nota:** Não é obrigatório ativar a `.venv` antes de rodar; o `main.py` localiza automaticamente o `spotdl` dentro da `.venv` usada para iniciar o Python.
 
@@ -222,8 +278,9 @@ rclone move "$HOME\Desktop\Music" gdrive:Músicas `
    - Crie um par de pastas (*Folderpair*):
      - **Pasta remota**: `/Músicas`
      - **Pasta local**: `/storage/emulated/0/Music/`
-     - **Tipo de sincronização**: **Unidirecional -> Para pasta local (*To local folder*)**
-     - **Desative** a exclusão de arquivos locais/remotos e **ative** pular arquivos já existentes para baixar apenas faixas novas sem duplicar ou apagar nada.
+     - **Tipo de sincronização**: **Unidirecional -> Para a pasta da esquerda (*To local folder*)**
+     - **Desative** a exclusão de arquivos locais/remotos e **ative** pular arquivos já existentes para baixar apenas faixas novas e playlists `.m3u` atualizadas sem duplicar ou apagar nada.
 2. **Musicolet**:
    - Aponte a biblioteca para `/storage/emulated/0/Music/`.
    - As pastas `Artista/Ano - Álbum/` e os metadados embutidos pelo `spotdl` são reconhecidos automaticamente.
+   - As playlists geradas pelo `playlist_gen.py` sincronizam em `/storage/emulated/0/Music/Playlists/*.m3u` e podem ser importadas diretamente no Musicolet com todos os caminhos relativos (`../Artista/Ano - Álbum/Faixa.ext`) já resolvidos.

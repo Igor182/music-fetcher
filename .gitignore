@@ -30,8 +30,11 @@ dist/
 *.part
 *.ytdl
 *.lrc
+*.m3u
+*.m3u8
 downloads/
 Music/
+playlists_m3u/
 
 # Credenciais, tokens e arquivos sensíveis
 .env
