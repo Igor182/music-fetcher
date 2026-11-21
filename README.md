@@ -138,24 +138,22 @@ Lê a pasta de um artista no Drive, identifica faixas soltas na raiz e lê suas 
 
 *(No Windows, use `.\.venv\Scripts\python.exe arrumar_artista.py ...`.)*
 
-#### Corrigir numeração interna de faixas de um álbum (`numerar_album.py`)
+#### Corrigir numeração interna de faixas de um álbum (`numerar-album` / `numerar_album.py`)
 
 Localiza a pasta do álbum no Google Drive pelo nome (ou caminho direto `"Artista/Álbum"`), busca a tracklist oficial via `yt-dlp` no YouTube/YouTube Music (ou recebe uma fonte manual via `--url` ou arquivo `--lista`) e grava **apenas a tag interna de número da faixa** (`trkn` em `.m4a` e `tracknumber` em `.mp3`), removendo prefixos numéricos antigos para manter os nomes dos arquivos limpos.
 
 ```bash
-# Modo interativo (pergunta o nome do álbum e mostra prévia antes de aplicar)
-.venv/bin/python numerar_album.py
+# Modo interativo (digite no terminal e ele pede o nome do álbum)
+numerar-album
 
-# Buscar álbum pelo nome ou caminho direto (com prévia sem alterar o Drive)
-.venv/bin/python numerar_album.py "Nevermind" --dry-run
-.venv/bin/python numerar_album.py "Nirvana/1991 - Nevermind"
-
-# Informar URL direta da playlist/álbum no YouTube ou arquivo .txt com a ordem das faixas
-.venv/bin/python numerar_album.py "Nevermind" --url "https://music.youtube.com/playlist?list=..."
-.venv/bin/python numerar_album.py "Nevermind" --lista lista.txt -y
+# Ou passando o nome/caminho e flags opcionais
+numerar-album "Nevermind" --dry-run
+numerar-album "Nirvana/1991 - Nevermind"
+numerar-album "Nevermind" --url "https://music.youtube.com/playlist?list=..."
+numerar-album "Nevermind" --lista lista.txt -y
 ```
 
-*(No Windows, use `.\.venv\Scripts\python.exe numerar_album.py ...`.)*
+*(Caso não tenha rodado o instalador, execute com `.venv/bin/python numerar_album.py` no Linux ou `.\.venv\Scripts\python.exe numerar_album.py` no Windows.)*
 
 ---
 
@@ -205,6 +203,7 @@ alias criar-playlist='python ~/projetos/music-fetcher/playlist_gen.py'
 | `install.ps1` | Instalador automático para Windows (cria `.venv`, instala deps e registra comandos no `PATH`). |
 | `baixar-musica.cmd` | Wrapper Windows para o `main.py`. |
 | `criar-playlist.cmd` | Wrapper Windows para o `playlist_gen.py`. |
+| `numerar-album.cmd` | Wrapper Windows para o `numerar_album.py`. |
 
 ---
 
