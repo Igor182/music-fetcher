@@ -1,15 +1,11 @@
 import argparse
-import json
-import os
 import re
 import shutil
 import subprocess
 import sys
-import time
 import unicodedata
-import urllib.parse
-import urllib.request
 from pathlib import Path
+import requests
 from mutagen import File as MutagenFile
 from mutagen.easyid3 import EasyID3
 from mutagen.id3 import ID3NoHeaderError
@@ -187,82 +183,56 @@ def gravar_tags_locais(caminho, artista, meta):
         return False
 
 
-def _carregar_credenciais_spotify():
-    cid = os.environ.get("SPOTIPY_CLIENT_ID")
-    secret = os.environ.get("SPOTIPY_CLIENT_SECRET")
-    if cid and secret:
-        return cid, secret
-
-    possiveis = [
-        Path.home() / ".spotdl" / "config.json",
-        Path.home() / ".config" / "spotdl" / "config.json",
-    ]
-    appdata = os.environ.get("APPDATA") or os.environ.get("USERPROFILE")
-    if appdata:
-        possiveis.append(Path(appdata) / ".spotdl" / "config.json")
-
-    for cfg_path in possiveis:
-        if cfg_path.is_file():
-            try:
-                dados = json.loads(cfg_path.read_text(encoding="utf-8"))
-                if dados.get("client_id") and dados.get("client_secret"):
-                    return dados["client_id"], dados["client_secret"]
-            except Exception:
-                pass
-    return None, None
-
-
-def _buscar_spotify(artista, titulo_limpo):
-    cid, secret = _carregar_credenciais_spotify()
-    if not (cid and secret):
-        return None
+def _buscar_itunes(artista, titulo_limpo):
     try:
-        import spotipy
-        from spotipy.oauth2 import SpotifyClientCredentials
-
-        sp = spotipy.Spotify(
-            auth_manager=SpotifyClientCredentials(client_id=cid, client_secret=secret),
-            requests_timeout=8,
+        resp = requests.get(
+            "https://itunes.apple.com/search",
+            params={"term": f"{artista} {titulo_limpo}", "entity": "song", "limit": 3},
+            headers={"User-Agent": USER_AGENT},
+            timeout=10,
         )
-        q = f'artist:"{artista}" track:"{titulo_limpo}"'
-        res = sp.search(q=q, type="track", limit=5)
-        items = (res.get("tracks") or {}).get("items") or []
-        if not items:
-            res = sp.search(q=f"{artista} {titulo_limpo}", type="track", limit=5)
-            items = (res.get("tracks") or {}).get("items") or []
-
-        art_norm = normalizar(artista)
-        for item in items:
-            artistas_item = [normalizar(a.get("name", "")) for a in (item.get("artists") or [])]
-            if art_norm and not any(art_norm in a or a in art_norm for a in artistas_item if a):
-                continue
-            album_obj = item.get("album") or {}
-            album_nome = (album_obj.get("name") or "").strip()
-            if not album_nome:
-                continue
-            release_date = album_obj.get("release_date") or ""
-            m_ano = re.search(r"(19|20)\d{2}", release_date)
-            ano = m_ano.group(0) if m_ano else ""
-            faixa = int(item.get("track_number") or 1)
-            titulo = (item.get("name") or titulo_limpo).strip()
-            return {"album": album_nome, "year": ano, "track": faixa, "title": titulo}
+        if resp.status_code != 200:
+            return None
+        dados = resp.json()
     except Exception:
         return None
+
+    art_norm = normalizar(artista)
+    for item in dados.get("results") or []:
+        artist_name = normalizar(item.get("artistName") or "")
+        if art_norm and artist_name and not (art_norm in artist_name or artist_name in art_norm):
+            continue
+
+        album_nome = (item.get("collectionName") or "").strip()
+        if not album_nome:
+            continue
+
+        release_date = str(item.get("releaseDate") or "")
+        m_ano = re.search(r"(19|20)\d{2}", release_date)
+        ano = m_ano.group(0) if m_ano else ""
+
+        faixa_raw = item.get("trackNumber")
+        faixa = int(faixa_raw) if isinstance(faixa_raw, int) and faixa_raw > 0 else None
+        titulo = (item.get("trackName") or titulo_limpo).strip()
+        return {"album": album_nome, "year": ano, "track": faixa, "title": titulo}
+
     return None
 
 
 def _buscar_musicbrainz(artista, titulo_limpo):
     query = f'artist:"{artista}" AND recording:"{titulo_limpo}"'
-    url = f"https://musicbrainz.org/ws/2/recording/?query={urllib.parse.quote(query)}&fmt=json&limit=5"
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            dados = json.loads(resp.read().decode("utf-8", errors="replace"))
+        resp = requests.get(
+            "https://musicbrainz.org/ws/2/recording/",
+            params={"query": query, "fmt": "json", "limit": 5},
+            headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
+            timeout=10,
+        )
+        if resp.status_code != 200:
+            return None
+        dados = resp.json()
     except Exception:
         return None
-    finally:
-        time.sleep(1.0)
 
     art_norm = normalizar(artista)
     for rec in dados.get("recordings") or []:
@@ -310,7 +280,7 @@ def _buscar_musicbrainz(artista, titulo_limpo):
 
 def buscar_metadados_online(artista, stem_arquivo):
     titulo_limpo = limpar_titulo_arquivo(stem_arquivo, artista)
-    meta = _buscar_spotify(artista, titulo_limpo)
+    meta = _buscar_itunes(artista, titulo_limpo)
     if meta:
         return meta
     return _buscar_musicbrainz(artista, titulo_limpo)
@@ -394,7 +364,7 @@ def main():
             meta_online = buscar_metadados_online(artista, Path(arq).stem)
             if not meta_online:
                 sem_tag += 1
-                print(f"[SEM TAG INTERNA] {arq}")
+                print(f"[NAO ENCONTRADO] {arq}")
                 continue
 
             gravou = gravar_tags_locais(local, artista, meta_online)
